@@ -1,107 +1,132 @@
 # retool_web
 
-简要说明  
-本仓库包含：网站前端/后端源码（PHP + 静态资源）和用于重建测试环境的**脱敏**数据库导出（`*_sanitized.sql.gz`）。目标是给外部团队一个可复现的测试环境（不含生产凭据）。
+**目的**  
+给外部团队一套可复现的测试包。包含：前端/后端源码（PHP + 静态资源）、脱敏的数据库导出，和导入/运行说明。**不含生产密码**。
 
 ---
 
-## 目录结构（示例）
+## 仓库结构（约定）
 
-retool_upload/
-├─ sql_okysadmin_va_data.sanitized.sql.gz
-├─ sql_houtai_com_data.sanitized.sql.gz
+/
 ├─ README.md
-└─ MANIFEST.md
-
-web/
-├─ index.php
-├─ public/
-└─ …（PHP, JS, CSS 等）
+├─ MANIFEST.md
+├─ sql_houtai_com_data.sanitized.sql.gz
+├─ sql_okysadmin_va_data.sanitized.sql.gz
+├─ web.zip                # 你的 web 程序打包（PHP + 静态）
+└─ retool_upload/         # （可选）单独放重建材料
+├─ README.md
+└─ …
 
 ---
 
-## 快速准备（给重构/集成方）
-1. 在测试主机创建空数据库（示例名 `test_okysadmin_va`, `test_houtai_com`）。  
-2. 解压并查看（确认无敏感信息）：
-   ```bash
-   gunzip -c sql_okysadmin_va_data.sanitized.sql.gz | head -n 80
+## 快速说明（对外团队）
+1. 解压 web 程序 `web.zip` 到 web 根目录（例如 `/var/www/html`）。  
+2. 解压并检查数据库文件：
+```bash
+gunzip -c sql_okysadmin_va_data.sanitized.sql.gz | head -n 80
+gunzip -c sql_houtai_com_data.sanitized.sql.gz | head -n 80
 
-	3.	导入到测试 MySQL：
+	3.	在本地 MySQL 中创建测试库并导入（示例）：
 
-mysql -u root -p test_okysadmin_va < <(gunzip -c sql_okysadmin_va_data.sanitized.sql.gz)
-mysql -u root -p test_houtai_com  < <(gunzip -c sql_houtai_com_data.sanitized.sql.gz)
+mysql -u root -p -e "CREATE DATABASE retool_test_okysadmin DEFAULT CHARACTER SET utf8mb4;"
+gunzip -c sql_okysadmin_va_data.sanitized.sql.gz | mysql -u root -p retool_test_okysadmin
 
+如需只导入 schema，可先审阅并移除 INSERT。导入时请确保 --default-character-set=utf8mb4。
 
-	4.	在 web/ 下创建 .env 或 config.php（示例变量）：
+⸻
 
-DB_HOST=127.0.0.1
-DB_NAME=test_okysadmin_va
-DB_USER=root
-DB_PASS=<testing-db-password>
-VIDEOPLAYER=ppvod
-AD_BACKEND_ENABLED=true
+推荐本地运行（Docker Compose 示例）
 
-切勿在仓库提交真实生产密码。
+把下面写成 docker-compose.yml 供测试团队使用（示例，仅供参考）：
 
-	5.	启动（本地快速测试示例，推荐用 Docker Compose）：
-
-# docker-compose.yml (示例)
 version: "3.8"
 services:
-  php:
-    image: php:8.1-fpm
-    volumes: ["./web:/var/www/html"]
   db:
     image: mysql:8
     environment:
-      MYSQL_DATABASE: test_okysadmin_va
-      MYSQL_ROOT_PASSWORD: rootpass
-    volumes: ["db_data:/var/lib/mysql"]
-  nginx:
+      MYSQL_ROOT_PASSWORD: changeme
+    volumes:
+      - db_data:/var/lib/mysql
+  php:
+    image: php:8.1-fpm
+    volumes:
+      - ./web:/var/www/html
+  web:
     image: nginx:stable
-    volumes: ["./web:/var/www/html","./nginx/conf.d:/etc/nginx/conf.d"]
-    ports: ["8080:80"]
+    volumes:
+      - ./web:/var/www/html:ro
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    ports:
+      - "8080:80"
+    depends_on:
+      - php
 volumes:
   db_data:
 
-然后 docker compose up -d。
+导入脱敏 SQL 到 db 容器：
 
-	6.	验证：
-	•	打开 http://<host>:8080，确认首页可访问。
-	•	登录（若有默认账号信息请在 MANIFEST 中说明）。
-	•	测试视频上传（参考 PPVOD 配置段）。
+docker-compose up -d
+gunzip -c sql_okysadmin_va_data.sanitized.sql.gz | docker exec -i $(docker-compose ps -q db) mysql -uroot -pchangeme retool_test_okysadmin
 
-⸻
-
-关于广告后台 / 视频（给重构方说明）
-	•	广告配置表：n_1_form_ad、n_1_form、n_site 等（见 SQL）。
-	•	视频上载使用 PPVOD，配置点：
-	•	视频存储域名（videohost/imghost）在 n_site.param 或配置文件。
-	•	上传接口路径请参照 web/public 中的上传脚本。
-	•	要求：重建测试环境时，PPVOD 可替换为本地静态存储或 S3 模拟端点。
 
 ⸻
 
-交付清单（MANIFEST）
-	•	sql_okysadmin_va_data.sanitized.sql.gz — schema + 部分测试数据
-	•	sql_houtai_com_data.sanitized.sql.gz — schema + 部分测试数据
-	•	web/ — PHP + 前端代码（需配置 DB 与上传存储）
-	•	README.md — 使用说明（本文件）
-	•	MANIFEST.md — 文件清单与注意事项
+与 Retool / Workflow 对接（给运维）
+	•	Retool startTrigger（替换占位符）：
+
+curl -X POST "https://api.retool.com/v1/workflows/<WORKFLOW_ID>/startTrigger" \
+  -H "X-Workflow-Api-Key: <RETOOL_WORKFLOW_API_KEY>" \
+  -H "Content-Type: application/json" \
+  -d '{"payload":{"db":"retool_test_okysadmin","notes":"start from repo"}}'
+
+	•	链接触发（你系统中的 /cursor/launch?ak=...）应使用 DIRECTORY_ACCESS_KEY 作为 ak 查询参数。
 
 ⸻
 
-敏感信息与注意事项
-	•	本包不应包含生产密码、私钥或未脱敏的 PII。
-	•	若需公开仓库前先再次确认脱敏并移除 config、.env 等。
-	•	导入后不要把测试 DB 直接指向生产资源。
+Slack / Events
+	•	确认 Slack 事件回调指向：
+https://<YOUR_HOST>/slack/events
+	•	Bot 在目标频道已被邀请。必要 OAuth scope 与 events：chat:write,channels:read,channels:history,files:write。
 
 ⸻
 
-联系与验收
-	•	若有问题，请在仓库 issue 中提交：描述步骤、失败日志与期望结果。
-	•	建议交付时同时提供：
-	•	可用的测试 DB 账号（仅测试权限）
-	•	PPVOD 测试端点或说明如何切换为模拟存储
+视频上传 / PPVOD（说明给开发）
+	•	目前站点使用 PPVOD 做上传与播放。关键点：
+	•	上传接口：/api/upload（示例，请在 web 源码中查找具体实现）
+	•	存储应指向测试对象存储或本地 public/uploads 目录
+	•	播放使用 PPVOD 播放器配置，确认 videohost、imghost 在 config 表中（已包含在导出数据）
+	•	请勿上传真实用户视频到外部测试服务。测试时使用小样本 MP4 文件。
 
-我还可以同时生成 `MANIFEST.md` 与 `retool_upload/README.md`（短版说明）文件内容。如果要我直接把这两份写入你本地的打包目录，告诉我 `~/Desktop/web` 路径下确认无误，我会给出可粘贴的 shell 命令。
+⸻
+
+广告后台（说明）
+	•	广告配置存在 n_1_form_ad、n_1_form 类表，广告素材是外链。
+	•	重建时：
+	•	保持广告表结构和示例数据即可。
+	•	若需要播放/预览，请把 imghost / videohost 指向测试域或本地静态资源。
+
+⸻
+
+敏感信息与注意事项（必须读）
+	•	本包不应包含生产服务器密码或私钥。
+	•	我已移除/脱敏 DEFINER、直接可用的 DB 密码、服务器 root 密码等。
+	•	仓库公开前再次确认：grep -i -E "password|pwd|secret|token|key" -R . 返回为空或仅示例值。
+	•	如果需要对方上线到你方测试服务器，请通过安全密钥管道单独下发最小权限凭证，不在此仓库中公开。
+
+⸻
+
+MANIFEST（简要）
+	•	sql_*sanitized*.sql.gz : 脱敏数据库导出（schema + 部分数据）。
+	•	web.zip : 网站代码与静态资源。
+	•	README.md : 本文件。
+	•	MANIFEST.md : 列表与校验方法。
+
+⸻
+
+交付说明 / 验收点
+	1.	对方在本地能用 docker-compose 起通环境并导入 SQL。
+	2.	能在浏览器访问首页（如 http://localhost:8080）。
+	3.	能触发视频上传接口并确认文件出现在 public/uploads（测试文件）。
+	4.	Retool 能通过 startTrigger 调用打通（运维提供 workflow id 与 api key 测试）。
+
+⸻
