@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: retool-video-platform
+    env: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    plan: starter
+    healthCheckPath: /
+    envVars:
+      - key: PHP_MEMORY_LIMIT
+        value: 256M
+      - key: PHP_UPLOAD_MAX_FILESIZE
+        value: 100M
+    disk:
+      name: retool-data
+      mountPath: /var/www/html/database
+      sizeGB: 1

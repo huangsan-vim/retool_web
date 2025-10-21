@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Retool Video Platform - Architecture Diagram</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 2rem;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 1rem;
+            padding: 2rem;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        
+        h1 {
+            text-align: center;
+            color: #2d3748;
+            margin-bottom: 2rem;
+            font-size: 2rem;
+        }
+        
+        .architecture {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+        
+        .layer {
+            border: 2px solid #e2e8f0;
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            background: #f7fafc;
+        }
+        
+        .layer-title {
+            font-size: 1.25rem;
+            font-weight: bold;
+            color: #2d3748;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #cbd5e0;
+        }
+        
+        .components {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+        
+        .component {
+            background: white;
+            border: 2px solid #cbd5e0;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            text-align: center;
+            transition: all 0.3s;
+        }
+        
+        .component:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            border-color: #667eea;
+        }
+        
+        .component-name {
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 0.5rem;
+        }
+        
+        .component-desc {
+            font-size: 0.875rem;
+            color: #718096;
+        }
+        
+        .arrow {
+            text-align: center;
+            font-size: 2rem;
+            color: #667eea;
+            margin: 0.5rem 0;
+        }
+        
+        .client { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+        .web-server { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; }
+        .application { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; }
+        .data { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); color: white; }
+        
+        .flow-diagram {
+            margin-top: 2rem;
+            padding: 2rem;
+            background: #f7fafc;
+            border-radius: 0.75rem;
+        }
+        
+        .flow-step {
+            display: flex;
+            align-items: center;
+            margin: 1rem 0;
+            padding: 1rem;
+            background: white;
+            border-radius: 0.5rem;
+            border-left: 4px solid #667eea;
+        }
+        
+        .step-number {
+            width: 40px;
+            height: 40px;
+            background: #667eea;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 1rem;
+        }
+        
+        .tech-stack {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+        
+        .tech-item {
+            background: white;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            border: 2px solid #e2e8f0;
+        }
+        
+        .tech-label {
+            font-weight: 600;
+            color: #667eea;
+            margin-bottom: 0.5rem;
+        }
+        
+        .tech-value {
+            color: #4a5568;
+        }
+    </style>
+<script src="https://sites.super.myninja.ai/_assets/ninja-daytona-script.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>🏗️ Retool Video Platform - System Architecture</h1>
+        
+        <div class="architecture">
+            <!-- Client Layer -->
+            <div class="layer">
+                <div class="layer-title">📱 Client Layer</div>
+                <div class="components">
+                    <div class="component client">
+                        <div class="component-name">Web Browser</div>
+                        <div class="component-desc">Desktop & Mobile</div>
+                    </div>
+                    <div class="component client">
+                        <div class="component-name">API Clients</div>
+                        <div class="component-desc">REST API Access</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="arrow">↓</div>
+            
+            <!-- Web Server Layer -->
+            <div class="layer">
+                <div class="layer-title">🌐 Web Server Layer</div>
+                <div class="components">
+                    <div class="component web-server">
+                        <div class="component-name">Nginx</div>
+                        <div class="component-desc">Reverse Proxy & Static Files</div>
+                    </div>
+                    <div class="component web-server">
+                        <div class="component-name">PHP-FPM</div>
+                        <div class="component-desc">PHP 8.2 FastCGI</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="arrow">↓</div>
+            
+            <!-- Application Layer -->
+            <div class="layer">
+                <div class="layer-title">⚙️ Application Layer</div>
+                <div class="components">
+                    <div class="component application">
+                        <div class="component-name">Router</div>
+                        <div class="component-desc">index.php</div>
+                    </div>
+                    <div class="component application">
+                        <div class="component-name">Controllers</div>
+                        <div class="component-desc">Home & API</div>
+                    </div>
+                    <div class="component application">
+                        <div class="component-name">Models</div>
+                        <div class="component-desc">Video, Category, Ad</div>
+                    </div>
+                    <div class="component application">
+                        <div class="component-name">Views</div>
+                        <div class="component-desc">PHP Templates</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="arrow">↓</div>
+            
+            <!-- Data Layer -->
+            <div class="layer">
+                <div class="layer-title">💾 Data Layer</div>
+                <div class="components">
+                    <div class="component data">
+                        <div class="component-name">SQLite Database</div>
+                        <div class="component-desc">Videos, Categories, Ads, Users</div>
+                    </div>
+                    <div class="component data">
+                        <div class="component-name">File System</div>
+                        <div class="component-desc">Cache & Uploads</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Request Flow -->
+        <div class="flow-diagram">
+            <h2 style="margin-bottom: 1rem; color: #2d3748;">🔄 Request Flow</h2>
+            
+            <div class="flow-step">
+                <div class="step-number">1</div>
+                <div>User sends HTTP request to web server</div>
+            </div>
+            
+            <div class="flow-step">
+                <div class="step-number">2</div>
+                <div>Nginx receives request and routes to PHP-FPM</div>
+            </div>
+            
+            <div class="flow-step">
+                <div class="step-number">3</div>
+                <div>Router (index.php) parses URL and determines route</div>
+            </div>
+            
+            <div class="flow-step">
+                <div class="step-number">4</div>
+                <div>Controller handles request and calls appropriate Model</div>
+            </div>
+            
+            <div class="flow-step">
+                <div class="step-number">5</div>
+                <div>Model queries SQLite database and returns data</div>
+            </div>
+            
+            <div class="flow-step">
+                <div class="step-number">6</div>
+                <div>Controller passes data to View for rendering</div>
+            </div>
+            
+            <div class="flow-step">
+                <div class="step-number">7</div>
+                <div>View generates HTML response</div>
+            </div>
+            
+            <div class="flow-step">
+                <div class="step-number">8</div>
+                <div>Response sent back through Nginx to client</div>
+            </div>
+        </div>
+        
+        <!-- Technology Stack -->
+        <div style="margin-top: 2rem;">
+            <h2 style="margin-bottom: 1rem; color: #2d3748;">🛠️ Technology Stack</h2>
+            <div class="tech-stack">
+                <div class="tech-item">
+                    <div class="tech-label">Frontend</div>
+                    <div class="tech-value">HTML5, CSS3, JavaScript</div>
+                </div>
+                <div class="tech-item">
+                    <div class="tech-label">Backend</div>
+                    <div class="tech-value">PHP 8.2</div>
+                </div>
+                <div class="tech-item">
+                    <div class="tech-label">Database</div>
+                    <div class="tech-value">SQLite 3</div>
+                </div>
+                <div class="tech-item">
+                    <div class="tech-label">Web Server</div>
+                    <div class="tech-value">Nginx</div>
+                </div>
+                <div class="tech-item">
+                    <div class="tech-label">Containerization</div>
+                    <div class="tech-value">Docker, Docker Compose</div>
+                </div>
+                <div class="tech-item">
+                    <div class="tech-label">Architecture</div>
+                    <div class="tech-value">MVC Pattern</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Key Features -->
+        <div style="margin-top: 2rem; padding: 1.5rem; background: #f7fafc; border-radius: 0.75rem;">
+            <h2 style="margin-bottom: 1rem; color: #2d3748;">✨ Key Features</h2>
+            <ul style="list-style: none; padding: 0;">
+                <li style="padding: 0.5rem 0; color: #4a5568;">✅ Modern MVC Architecture</li>
+                <li style="padding: 0.5rem 0; color: #4a5568;">✅ RESTful API Endpoints</li>
+                <li style="padding: 0.5rem 0; color: #4a5568;">✅ Responsive Design</li>
+                <li style="padding: 0.5rem 0; color: #4a5568;">✅ Video Management System</li>
+                <li style="padding: 0.5rem 0; color: #4a5568;">✅ Category & Tag System</li>
+                <li style="padding: 0.5rem 0; color: #4a5568;">✅ Search Functionality</li>
+                <li style="padding: 0.5rem 0; color: #4a5568;">✅ Advertisement Management</li>
+                <li style="padding: 0.5rem 0; color: #4a5568;">✅ Docker Deployment</li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>

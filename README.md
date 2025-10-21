@@ -1,178 +1,272 @@
-retool_web
+# Retool Video Platform - Refactored & Modernized
 
-目的
+A modern, refactored video sharing platform built with PHP, featuring a clean MVC architecture, responsive design, and Docker deployment.
 
-给外部开发/集成团队一套可复现的测试包。包含：
-	•	已脱敏的数据库导出（schema + 示例数据）
-	•	网站源码（PHP + 静态资源）
-	•	部署与导入说明
-不包含生产密码或私钥。
+## 🚀 Features
 
-⸻
+- **Modern Architecture**: Clean MVC pattern with separation of concerns
+- **Responsive Design**: Mobile-first, fully responsive UI
+- **Video Management**: Browse, search, and watch videos
+- **Category System**: Organized content by categories
+- **Advertisement System**: Flexible ad placement system
+- **API Endpoints**: RESTful API for programmatic access
+- **SQLite Database**: Lightweight, file-based database
+- **Docker Support**: Easy deployment with Docker and Docker Compose
+- **Test Data**: Pre-populated with sample videos and content
 
-仓库结构（约定）
+## 📋 Requirements
 
-/ 
-├─ README.md
-├─ MANIFEST.md
-├─ sql_houtai_com_data.sanitized.sql.gz
-├─ sql_okysadmin_va_data.sanitized.sql.gz
-├─ web.zip                # 网站源码 (PHP + 静态)
-└─ retool_upload/         # 可选：单独放重建材料
-   ├─ README.md
-   └─ ...
+- Docker and Docker Compose (recommended)
+- OR PHP 8.2+ with SQLite extension
+- OR Any web server (Apache/Nginx) with PHP support
 
+## 🛠️ Installation & Deployment
 
-⸻
+### Method 1: Docker (Recommended)
 
-快速检查
+1. **Build and run with Docker Compose:**
+   ```bash
+   cd refactored_retool
+   docker-compose up -d --build
+   ```
 
-查看导出头部：
+2. **Access the application:**
+   - Open your browser and navigate to `http://localhost:8080`
 
-gunzip -c sql_okysadmin_va_data.sanitized.sql.gz | head -n 80
-gunzip -c sql_houtai_com_data.sanitized.sql.gz  | head -n 80
+3. **Stop the application:**
+   ```bash
+   docker-compose down
+   ```
 
+### Method 2: Manual Installation
 
-⸻
+1. **Install PHP 8.2+ with SQLite:**
+   ```bash
+   # On Ubuntu/Debian
+   sudo apt-get install php8.2 php8.2-sqlite3 php8.2-fpm
+   
+   # On macOS with Homebrew
+   brew install php@8.2
+   ```
 
-本地导入示例（直接 MySQL）
-	1.	创建数据库：
+2. **Initialize the database:**
+   ```bash
+   cd refactored_retool
+   php database/init.php
+   ```
 
-mysql -u root -p -e "CREATE DATABASE retool_test_okysadmin DEFAULT CHARACTER SET utf8mb4;"
+3. **Start PHP built-in server:**
+   ```bash
+   cd public
+   php -S localhost:8080
+   ```
 
-	2.	导入数据：
+4. **Access the application:**
+   - Open your browser and navigate to `http://localhost:8080`
 
-gunzip -c sql_okysadmin_va_data.sanitized.sql.gz | mysql -u root -p retool_test_okysadmin
-gunzip -c sql_houtai_com_data.sanitized.sql.gz  | mysql -u root -p retool_test_okysadmin
+### Method 3: Production Deployment
 
-如需只导入 schema，请先审阅 SQL 并移除 INSERT 语句。
+For production deployment, use the provided Docker configuration or set up with Nginx/Apache:
 
-⸻
+**Nginx Configuration Example:**
+```nginx
+server {
+    listen 80;
+    server_name your-domain.com;
+    root /path/to/refactored_retool/public;
+    index index.php;
 
-推荐本地运行（Docker Compose 示例）
+    location / {
+        try_files $uri $uri/ /index.php?$query_string;
+    }
 
-将下列 docker-compose.yml 放在包根，便于对方一键启动测试环境。
+    location ~ \.php$ {
+        fastcgi_pass unix:/var/run/php/php8.2-fpm.sock;
+        fastcgi_index index.php;
+        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+        include fastcgi_params;
+    }
+}
+```
 
-version: "3.8"
-services:
-  db:
-    image: mysql:8
-    environment:
-      MYSQL_ROOT_PASSWORD: changeme
-    volumes:
-      - db_data:/var/lib/mysql
+## 📁 Project Structure
 
-  php:
-    image: php:8.1-fpm
-    volumes:
-      - ./web:/var/www/html
+```
+refactored_retool/
+├── public/                 # Public web root
+│   ├── index.php          # Application entry point
+│   └── assets/            # Static assets (CSS, JS, images)
+├── src/                   # Application source code
+│   ├── Controllers/       # Request handlers
+│   ├── Models/           # Data models
+│   ├── Views/            # View templates
+│   └── Config/           # Configuration files
+├── database/             # Database files
+│   ├── schema.sql        # Database schema
+│   ├── seed.php          # Test data seeder
+│   ├── init.php          # Database initialization
+│   └── retool.db         # SQLite database file
+├── docker/               # Docker configuration
+│   ├── nginx.conf        # Nginx configuration
+│   ├── default.conf      # Site configuration
+│   └── supervisord.conf  # Supervisor configuration
+├── Dockerfile            # Docker image definition
+├── docker-compose.yml    # Docker Compose configuration
+└── README.md            # This file
+```
 
-  web:
-    image: nginx:stable
-    volumes:
-      - ./web:/var/www/html:ro
-      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
-    ports:
-      - "8080:80"
-    depends_on:
-      - php
-volumes:
-  db_data:
+## 🎯 Key Features Explained
 
-导入到容器的示例：
+### Video Management
+- Browse all videos with pagination
+- View individual video details with player
+- Search videos by title, description, or tags
+- Filter videos by category
+- View count tracking
 
-docker-compose up -d
-gunzip -c sql_okysadmin_va_data.sanitized.sql.gz | docker exec -i $(docker-compose ps -q db) mysql -uroot -pchangeme retool_test_okysadmin
+### Category System
+- Multiple video categories
+- Category-based filtering
+- Easy navigation between categories
 
+### Advertisement System
+- Multiple ad positions (header, sidebar, footer, video list)
+- Flexible ad management
+- Support for image-based ads with links
 
-⸻
+### API Endpoints
+- `GET /api/videos` - List all videos
+- `GET /api/video/{id}` - Get single video
+- `GET /api/categories` - List all categories
+- `GET /api/search?q={keyword}` - Search videos
+- `GET /api/latest?limit={n}` - Get latest videos
+- `GET /api/popular?limit={n}` - Get popular videos
 
-部署说明（简洁）
-	1.	解压 web.zip 到 web 根目录（例如 /var/www/html）。
-	2.	配置 Nginx/Apache 指向解压目录并启用 PHP-FPM。
-	3.	在 config 或 .env 中设置测试用的 PPVOD_API_URL 与 PPVOD_API_KEY（见下）。
+## 🔧 Configuration
 
-⸻
+Edit `src/Config/config.php` to customize:
 
-PPVOD（视频上传/播放）说明
-	•	站点使用 PPVOD 做上传与播放。配置项通常在网站配置表或 .env 中（videohost、imghost）。
-	•	上传接口示例（伪代码）：
+```php
+return [
+    'database' => [
+        'driver' => 'sqlite',
+        'path' => __DIR__ . '/../../database/retool.db',
+    ],
+    'app' => [
+        'name' => 'Retool Video Platform',
+        'url' => 'http://localhost:8080',
+        'debug' => true,
+    ],
+    'pagination' => [
+        'videos_per_page' => 24,
+    ],
+    // ... more configuration options
+];
+```
 
-POST {PPVOD_API_URL}/upload
-Headers: Authorization: Bearer <PPVOD_API_KEY>
-Content-Type: multipart/form-data
-Body: file=@sample.mp4
+## 📊 Database Schema
 
-	•	测试时请使用小样本 MP4。不要上传生产用户视频到外部服务。
+The application uses SQLite with the following main tables:
 
-⸻
+- **videos**: Stores video information (title, description, URL, thumbnail, etc.)
+- **categories**: Video categories
+- **advertisements**: Advertisement data
+- **users**: User accounts (for future admin functionality)
+- **site_config**: Site-wide configuration
 
-广告后台说明
-	•	广告配置存于数据库表（如 n_1_form_ad、n_1_form 等）。
-	•	广告素材为外链。测试重建时保留表结构与示例数据即可。
-	•	若需预览广告，请把 imghost / videohost 指向测试域或本地静态目录。
+## 🎨 Customization
 
-⸻
+### Styling
+- Edit `assets/css/style.css` to customize the appearance
+- CSS variables are defined in `:root` for easy theming
 
-与 Retool / Workflow 对接（运维）
+### Adding Videos
+- Use the database seeder to add more test data
+- Or manually insert into the `videos` table
 
-Start trigger 示例：
+### Adding Categories
+- Insert into the `categories` table
+- Update navigation automatically reflects changes
 
-curl -X POST "https://api.retool.com/v1/workflows/<WORKFLOW_ID>/startTrigger" \
-  -H "X-Workflow-Api-Key: <RETOOL_WORKFLOW_API_KEY>" \
-  -H "Content-Type: application/json" \
-  -d '{"payload":{"db":"retool_test_okysadmin","notes":"start from repo"}}'
+## 🔐 Security Features
 
-系统内部 link 触发（示例）：
+- SQL injection prevention with prepared statements
+- XSS protection with output escaping
+- CSRF protection ready (can be implemented)
+- Secure headers configured in Nginx
+- Input validation and sanitization
 
-/cursor/launch?ak=<DIRECTORY_ACCESS_KEY>
+## 📈 Performance Optimization
 
-DIRECTORY_ACCESS_KEY 应通过密钥管道单独下发，不放在仓库。
+- Lazy loading for images
+- Gzip compression enabled
+- Static asset caching
+- Database query optimization
+- Efficient pagination
 
-⸻
+## 🐛 Troubleshooting
 
-Slack / Events（运维）
-	•	Slack 事件回调应指向： https://<YOUR_HOST>/slack/events
-	•	Bot 已被邀请到目标频道。
-	•	OAuth scopes（最小）：chat:write, channels:read, channels:history, files:write
+### Database Issues
+```bash
+# Reinitialize database
+rm database/retool.db
+php database/init.php
+```
 
-⸻
+### Permission Issues
+```bash
+# Fix permissions
+chmod -R 755 refactored_retool
+chmod -R 777 refactored_retool/database
+chmod -R 777 refactored_retool/cache
+```
 
-敏感信息与注意事项（必须读）
-	•	本包为脱敏导出。已移除或替换生产密码、DEFINER、MYSQL_PWD、SERVER 密钥等敏感项。
-	•	上传到公开仓库前再次核查：
+### Docker Issues
+```bash
+# Rebuild containers
+docker-compose down
+docker-compose up -d --build --force-recreate
+```
 
-grep -RinE "password|pwd|secret|token|key|MYSQL_PWD|DEFINER|ROOT|SSH|PRIVATE" .
+## 📝 Development
 
-输出应为空或仅示例占位符。
-	•	若需对接线上测试服务器，请通过独立安全渠道下发最小权限凭证。不要在仓库中公开凭据。
+### Adding New Features
 
-⸻
+1. **Create a new model** in `src/Models/`
+2. **Create a controller** in `src/Controllers/`
+3. **Add routes** in `public/index.php`
+4. **Create views** in `src/Views/`
 
-MANIFEST（简要）
-	•	sql_*sanitized*.sql.gz : 脱敏数据库导出（schema + 示例数据）
-	•	web.zip                : 网站源码与静态资源
-	•	README.md              : 使用说明（本文件）
-	•	MANIFEST.md            : 文件清单与校验方法
+### Database Migrations
 
-⸻
+To modify the database schema:
+1. Update `database/schema.sql`
+2. Run `php database/init.php` to recreate the database
 
-交付与验收清单
+## 🤝 Contributing
 
-对方完成后应确认：
-	1.	能用 docker-compose 或直接部署并访问首页（例如 http://localhost:8080）。
-	2.	能登录后台（使用测试账号）。
-	3.	能触发视频上传接口并在 public/uploads（或测试存储）看到文件。
-	4.	广告按 DB 配置正常渲染。
-	5.	Retool 能通过 startTrigger 调用成功（运维提供 WORKFLOW_ID 与 RETOOL_WORKFLOW_API_KEY）。
+This is a demo/refactored project. Feel free to:
+- Fork and modify for your needs
+- Report issues or suggestions
+- Submit improvements
 
-⸻
+## 📄 License
 
-联系与回报
+This project is open source and available for educational and commercial use.
 
-完成重建或遇到问题，请回报：
-	•	可访问的测试 URL
-	•	测试 DB 名称
-	•	是否能上传视频（接口返回码）
-	•	是否能看到广告位
+## 🙏 Acknowledgments
 
+- Original project: Retool Web Package
+- Refactored and modernized with clean architecture
+- Built with modern PHP best practices
+
+## 📞 Support
+
+For questions or issues:
+- Check the troubleshooting section
+- Review the code comments
+- Examine the example implementations
+
+---
+
+**Built with ❤️ using PHP, SQLite, and modern web technologies**

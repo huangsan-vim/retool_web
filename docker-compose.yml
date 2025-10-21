@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    container_name: retool_video_platform
+    ports:
+      - "8080:80"
+    volumes:
+      - ./database:/var/www/html/database
+      - ./cache:/var/www/html/cache
+      - ./public/uploads:/var/www/html/public/uploads
+    environment:
+      - PHP_MEMORY_LIMIT=256M
+      - PHP_UPLOAD_MAX_FILESIZE=100M
+      - PHP_POST_MAX_SIZE=100M
+    restart: unless-stopped
+    networks:
+      - retool_network
+
+networks:
+  retool_network:
+    driver: bridge
