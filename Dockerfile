@@ -5,7 +5,8 @@ RUN apk add --no-cache \
     nginx \
     supervisor \
     sqlite \
-    sqlite-dev
+    sqlite-dev \
+    bash
 
 # Install PHP extensions
 RUN docker-php-ext-install pdo pdo_sqlite
@@ -36,11 +37,19 @@ COPY docker/default.conf /etc/nginx/http.d/default.conf
 # Copy supervisor configuration
 COPY docker/supervisord.conf /etc/supervisord.conf
 
-# Initialize database
-RUN php /var/www/html/database/init.php
+# Create startup script that initializes database on first run
+RUN echo '#!/bin/bash' > /startup.sh && \
+    echo 'if [ ! -f /var/www/html/database/retool.db ]; then' >> /startup.sh && \
+    echo '  echo "Initializing database..."' >> /startup.sh && \
+    echo '  php /var/www/html/database/init.php' >> /startup.sh && \
+    echo '  chown www-data:www-data /var/www/html/database/retool.db' >> /startup.sh && \
+    echo '  chmod 666 /var/www/html/database/retool.db' >> /startup.sh && \
+    echo 'fi' >> /startup.sh && \
+    echo 'exec /usr/bin/supervisord -c /etc/supervisord.conf' >> /startup.sh && \
+    chmod +x /startup.sh
 
 # Expose port
 EXPOSE 80
 
-# Start supervisor
-CMD ["/usr/bin/supervisord", "-c", "/etc/supervisord.conf"]
+# Start with initialization script
+CMD ["/startup.sh"]
